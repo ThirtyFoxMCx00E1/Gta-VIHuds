@@ -1,0 +1,33 @@
+name: Build VIHud
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'source/**'
+      - '.github/workflows/build.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: nttld/setup-ndk@v1
+        id: ndk
+        with:
+          ndk-version: r27
+          add-to-path: true
+      - name: Build
+        run: |
+          cd source
+          ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=jni/Android.mk NDK_APPLICATION_MK=jni/Application.mk -j4
+          mkdir -p ../bin
+          cp libs/armeabi-v7a/libVIHud32.so libs/arm64-v8a/libVIHud64.so ../bin/
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: VIHud-binaries
+          path: |
+            bin/libVIHud32.so
+            bin/libVIHud64.so
+          if-no-files-found: error
